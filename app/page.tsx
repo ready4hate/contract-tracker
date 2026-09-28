@@ -101,6 +101,10 @@ export default function DashboardPage() {
 
   const totalAmount = enriched.reduce((s, c) => s + c.amount, 0)
   const totalPaid   = enriched.reduce((s, c) => s + c.amountPaid, 0)
+  const currentYear = new Date().getFullYear()
+  const paidCurrentYear = payments
+    .filter(p => p.paidAt && new Date(p.paidAt).getFullYear() === currentYear)
+    .reduce((s, p) => s + p.amount, 0)
   const activeCount    = enriched.filter((c) => c.status === 'active').length
   const overdueCount   = enriched.filter((c) => c.status === 'overdue').length
   const completedCount = enriched.filter((c) => c.status === 'completed').length
@@ -230,7 +234,7 @@ export default function DashboardPage() {
         <KpiCard label="Общая сумма" value={formatMoney(totalAmount)} sub={`${enriched.length} контрактов`} />
 
         <KpiCard label="Оплачено" value={formatMoney(totalPaid)} valueColor="var(--ok)"
-          sub={totalAmount > 0 ? `${Math.round(totalPaid / totalAmount * 100)}% от суммы` : undefined} />
+          sub={totalAmount > 0 ? `${Math.round(totalPaid / totalAmount * 100)}% от суммы · за ${currentYear} год: ${formatMoney(paidCurrentYear)}` : undefined} />
         <KpiCard label="Остаток"  value={formatMoney(totalAmount - totalPaid)} valueColor="var(--danger)"
           sub={totalAmount > 0 ? `${Math.round((totalAmount - totalPaid) / totalAmount * 100)}% от суммы` : undefined} />
       </div>

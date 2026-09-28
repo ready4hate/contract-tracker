@@ -13,7 +13,18 @@ export default function ReportsPage() {
   const years = useMemo(() => {
     const set = new Set<number>()
     payments.forEach(p => { if (p.paidAt) set.add(new Date(p.paidAt).getFullYear()) })
+    set.add(new Date().getFullYear())
     return Array.from(set).sort((a, b) => b - a)
+  }, [payments])
+
+  const yearTotals = useMemo(() => {
+    const totals = new Map<number, number>()
+    payments.forEach(p => {
+      if (!p.paidAt) return
+      const year = new Date(p.paidAt).getFullYear()
+      totals.set(year, (totals.get(year) ?? 0) + p.amount)
+    })
+    return totals
   }, [payments])
 
   const [selectedYear, setSelectedYear] = useState<number | null>(null)
@@ -77,7 +88,7 @@ export default function ReportsPage() {
     <div className="fade-in ct-page" style={{ padding: '26px 30px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
       {/* Заголовок + выбор года */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>Отчёты</h1>
         <div style={{ display: 'flex', gap: 6 }}>
           {years.map(y => (
@@ -86,6 +97,9 @@ export default function ReportsPage() {
               {y}
             </button>
           ))}
+        </div>
+        <div style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--muted-ink)', whiteSpace: 'nowrap' }}>
+          Оплачено за 2026 год: <b className="tnum" style={{ color: 'var(--ok)' }}>{formatMoney(yearTotals.get(2026) ?? 0)}</b>
         </div>
       </div>
 
@@ -96,7 +110,7 @@ export default function ReportsPage() {
         {/* KPI */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(180px, 320px))', gap: 12, justifyContent: 'start' }}>
           {[
-            { label: 'Общий оборот', value: formatMoney(totalTurnover), color: 'var(--ok)' },
+            { label: `Общий оборот за ${activeYear} год`, value: formatMoney(totalTurnover), color: 'var(--ok)' },
             { label: 'Общий долг', value: formatMoney(totalDebt), color: 'var(--danger)' },
             { label: 'Исполнителей', value: String(contractorReports.length) },
             { label: 'Контрактов', value: String(totalContractsCount) },
