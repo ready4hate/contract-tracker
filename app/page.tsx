@@ -11,6 +11,8 @@ import { format, parseISO, startOfMonth } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { AlertCircle, Clock, XCircle, X, Receipt } from 'lucide-react'
 
+const DIRECTION_YEARS = [2026, 2025, 2024, 2023]
+
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number }[]; label?: string }) {
   if (!active || !payload?.length) return null
   const items = payload.filter(p => p.value > 0).sort((a, b) => b.value - a.value)
@@ -234,20 +236,40 @@ export default function DashboardPage() {
               <div style={{ fontSize: 13, color: 'var(--faint)' }}>
                 {enriched.filter(c => c.direction === dir).length} контрактов · {objects.filter(o => o.direction === dir).length} объектов
               </div>
-              <div style={{ marginTop: 16, borderTop: '1px solid var(--line-soft)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {(['active', 'completed', 'planning', 'overdue'] as ContractStatus[]).map((st) => {
-                  const cnt = enriched.filter(c => c.direction === dir && c.status === st).length
-                  if (!cnt) return null
-                  return (
-                    <Link key={st} href={`/contracts?direction=${id}&status=${st}`}
-                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, textDecoration: 'none', borderRadius: 6, padding: '2px 4px', margin: '0 -4px', transition: 'background .15s' }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0.04)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                      <span style={{ color: 'var(--muted-ink)' }}>{statusLabel[st]}</span>
-                      <b className="tnum" style={{ color: 'var(--ink)' }}>{cnt}</b>
-                    </Link>
-                  )
-                })}
+              <div style={{ marginTop: 16, borderTop: '1px solid var(--line-soft)', paddingTop: 12, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(180px, 0.7fr)', gap: 24, alignItems: 'start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(['active', 'completed', 'planning', 'overdue'] as ContractStatus[]).map((st) => {
+                    const cnt = enriched.filter(c => c.direction === dir && c.status === st).length
+                    if (!cnt) return null
+                    return (
+                      <Link key={st} href={`/contracts?direction=${id}&status=${st}`}
+                        style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, textDecoration: 'none', borderRadius: 6, padding: '2px 4px', margin: '0 -4px', transition: 'background .15s' }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0.04)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                        <span style={{ color: 'var(--muted-ink)' }}>{statusLabel[st]}</span>
+                        <b className="tnum" style={{ color: 'var(--ink)' }}>{cnt}</b>
+                      </Link>
+                    )
+                  })}
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--faint)', marginBottom: 8 }}>Сумма договоров по годам</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {DIRECTION_YEARS.map(year => {
+                      const yearTotal = enriched
+                        .filter(c => c.direction === dir && Number((c.startDate || c.createdAt)?.slice(0, 4)) === year)
+                        .reduce((sum, c) => sum + c.amount, 0)
+                      return (
+                        <div key={year} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13 }}>
+                          <span style={{ color: 'var(--muted-ink)' }}>{year}</span>
+                          <b className="tnum" style={{ color: yearTotal > 0 ? 'var(--ink)' : 'var(--faint)', whiteSpace: 'nowrap' }}>
+                            {yearTotal > 0 ? formatMoney(yearTotal) : '—'}
+                          </b>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           )
