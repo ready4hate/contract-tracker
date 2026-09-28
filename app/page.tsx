@@ -232,25 +232,12 @@ export default function DashboardPage() {
                 <span style={{ width: 11, height: 11, borderRadius: '50%', background: color, display: 'inline-block' }} />
                 {label}
               </div>
-              <div className="tnum" style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', margin: '12px 0 4px', letterSpacing: '-0.02em' }}>{formatMoney(total)}</div>
-              <div style={{ fontSize: 13, color: 'var(--faint)' }}>
-                {enriched.filter(c => c.direction === dir).length} контрактов · {objects.filter(o => o.direction === dir).length} объектов
-              </div>
-              <div style={{ marginTop: 16, borderTop: '1px solid var(--line-soft)', paddingTop: 12, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(180px, 0.7fr)', gap: 24, alignItems: 'start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {(['active', 'completed', 'planning', 'overdue'] as ContractStatus[]).map((st) => {
-                    const cnt = enriched.filter(c => c.direction === dir && c.status === st).length
-                    if (!cnt) return null
-                    return (
-                      <Link key={st} href={`/contracts?direction=${id}&status=${st}`}
-                        style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, textDecoration: 'none', borderRadius: 6, padding: '2px 4px', margin: '0 -4px', transition: 'background .15s' }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0.04)'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                        <span style={{ color: 'var(--muted-ink)' }}>{statusLabel[st]}</span>
-                        <b className="tnum" style={{ color: 'var(--ink)' }}>{cnt}</b>
-                      </Link>
-                    )
-                  })}
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(180px, 0.7fr)', gap: 24, alignItems: 'start', marginTop: 12 }}>
+                <div>
+                  <div className="tnum" style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', marginBottom: 4, letterSpacing: '-0.02em' }}>{formatMoney(total)}</div>
+                  <div style={{ fontSize: 13, color: 'var(--faint)' }}>
+                    {enriched.filter(c => c.direction === dir).length} контрактов · {objects.filter(o => o.direction === dir).length} объектов
+                  </div>
                 </div>
                 <div>
                   <div style={{ fontSize: 12, color: 'var(--faint)', marginBottom: 8 }}>Сумма договоров по годам</div>
@@ -270,6 +257,21 @@ export default function DashboardPage() {
                     })}
                   </div>
                 </div>
+              </div>
+              <div style={{ marginTop: 16, borderTop: '1px solid var(--line-soft)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(['active', 'completed', 'planning', 'overdue'] as ContractStatus[]).map((st) => {
+                    const cnt = enriched.filter(c => c.direction === dir && c.status === st).length
+                    if (!cnt) return null
+                    return (
+                      <Link key={st} href={`/contracts?direction=${id}&status=${st}`}
+                        style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, textDecoration: 'none', borderRadius: 6, padding: '2px 4px', margin: '0 -4px', transition: 'background .15s' }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0.04)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                        <span style={{ color: 'var(--muted-ink)' }}>{statusLabel[st]}</span>
+                        <b className="tnum" style={{ color: 'var(--ink)' }}>{cnt}</b>
+                      </Link>
+                    )
+                  })}
               </div>
             </div>
           )
