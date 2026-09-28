@@ -35,6 +35,7 @@ export function ContractDocuments({ contractId }: { contractId: string }) {
   const { documents, contracts, addDocument, deleteDocument, syncDocuments } = useStore()
   const [uploading, setUploading] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState('')
   const [category, setCategory] = useState<DocumentCategory>('other')
   const [filterCat, setFilterCat] = useState<DocumentCategory | 'all'>('all')
@@ -55,8 +56,7 @@ export function ContractDocuments({ contractId }: { contractId: string }) {
 
   const allDocs = documents.filter(d => d.contractId === contractId)
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
+  const handleFiles = async (files: File[]) => {
     if (!files.length || !contract) return
     setUploading(true); setError('')
     try {
@@ -89,6 +89,17 @@ export function ContractDocuments({ contractId }: { contractId: string }) {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    await handleFiles(Array.from(e.target.files ?? []))
+  }
+
+  const handleDrop = async (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    setDragOver(false)
+    if (uploading || syncing) return
+    await handleFiles(Array.from(e.dataTransfer.files))
   }
 
   const [catOverrides, setCatOverrides] = useState<Record<string, DocumentCategory>>({})
@@ -218,8 +229,12 @@ export function ContractDocuments({ contractId }: { contractId: string }) {
           {DOCUMENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
         <button onClick={() => fileInputRef.current?.click()} disabled={uploading || syncing}
+          onDragEnter={e => { e.preventDefault(); if (!uploading && !syncing) setDragOver(true) }}
+          onDragOver={e => { e.preventDefault(); if (!uploading && !syncing) e.dataTransfer.dropEffect = 'copy' }}
+          onDragLeave={e => { e.preventDefault(); setDragOver(false) }}
+          onDrop={handleDrop}
           title={syncing ? 'Дождитесь окончания синхронизации' : ''}
-          style={{ flex: 1, padding: '9px 14px', border: `1.5px dashed ${syncing ? '#f59e0b' : '#d4dae2'}`, borderRadius: 10, background: syncing ? '#fffbeb' : 'none', fontFamily: 'inherit', fontSize: 13, color: syncing ? '#d97706' : 'var(--faint)', cursor: uploading || syncing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+          style={{ flex: 1, padding: '9px 14px', border: `1.5px dashed ${syncing ? '#f59e0b' : dragOver ? '#2f6bdc' : '#d4dae2'}`, borderRadius: 10, background: syncing ? '#fffbeb' : dragOver ? '#eff6ff' : 'none', fontFamily: 'inherit', fontSize: 13, color: syncing ? '#d97706' : dragOver ? 'var(--maf)' : 'var(--faint)', cursor: uploading || syncing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, transition: 'border-color .15s, background .15s, color .15s' }}
           onMouseEnter={e => { if (!uploading && !syncing) { (e.currentTarget as HTMLElement).style.borderColor = '#2f6bdc'; (e.currentTarget as HTMLElement).style.color = 'var(--maf)' } }}
           onMouseLeave={e => { if (!syncing) { (e.currentTarget as HTMLElement).style.borderColor = '#d4dae2'; (e.currentTarget as HTMLElement).style.color = 'var(--faint)' } }}>
           {syncing ? (
@@ -233,7 +248,7 @@ export function ContractDocuments({ contractId }: { contractId: string }) {
               Загрузка...
             </>
           ) : (
-            <><Upload size={14} /> Загрузить</>
+            <><Upload size={14} /> {dragOver ? 'Отпустите файлы для загрузки' : 'Перетащите документы сюда или нажмите'}</>
           )}
         </button>
       </div>
