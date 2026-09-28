@@ -7,7 +7,7 @@ import { ContractStatus } from '@/lib/types'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { format, parseISO, startOfMonth, addMonths } from 'date-fns'
+import { format, parseISO, startOfMonth } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { AlertCircle, Clock, XCircle, X, Receipt } from 'lucide-react'
 
@@ -114,28 +114,6 @@ export default function DashboardPage() {
 
   const overdue = enriched.filter((c) => c.status === 'overdue')
   const dueSoon = enriched.filter((c) => isDueSoon(c.endDate, c.status))
-
-  const forecastData = useMemo(() => {
-    const now = new Date()
-    return [0, 1, 2].map(offset => {
-      const monthStart = startOfMonth(addMonths(now, offset))
-      const label = format(monthStart, 'LLLL yyyy', { locale: ru })
-      const active = enriched.filter(c => c.status === 'active' || c.status === 'planning')
-      const expected = active.reduce((s, c) => {
-        const remaining = c.amount - c.amountPaid
-        if (remaining <= 0) return s
-        const endDate = parseISO(c.endDate)
-        // Не включаем контракт если он уже закончился до начала этого месяца
-        if (endDate < monthStart) return s
-        const monthsLeft = Math.max(1, Math.ceil((endDate.getTime() - now.getTime()) / (30 * 86400000)))
-        return s + remaining / monthsLeft
-      }, 0)
-      return { month: label, expected: Math.round(expected) }
-    })
-  }, [enriched])
-
-  const totalExpected = forecastData.reduce((s, m) => s + m.expected, 0)
-  const totalDebt = enriched.filter(c => c.status !== 'cancelled').reduce((s, c) => s + (c.amount - c.amountPaid), 0)
 
   const recentPayments = useMemo(() =>
     [...payments]
@@ -310,23 +288,6 @@ export default function DashboardPage() {
             <PinnedBreakdown label={pinned.label} payload={pinned.payload} onClose={() => setPinned(null)} />
           </div>
         )}
-      </div>
-
-      {/* Прогноз поступлений */}
-      <div className="ct-card" style={{ padding: '20px 22px' }}>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Прогноз поступлений</div>
-        <div style={{ fontSize: 12, color: 'var(--faint)', marginBottom: 16 }}>
-          Ожидается получить за 3 месяца: <b className="tnum" style={{ color: 'var(--ink)' }}>{formatMoney(totalExpected)}</b>
-          {totalDebt > 0 && <> · Дебиторка: <b className="tnum" style={{ color: 'var(--danger)' }}>{formatMoney(totalDebt)}</b></>}
-        </div>
-        <div className="ct-grid-forecast" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(180px, 420px))', gap: 12, justifyContent: 'start' }}>
-          {forecastData.map((m, i) => (
-            <div key={i} style={{ background: 'var(--bg)', borderRadius: 12, padding: '14px 18px', borderLeft: `4px solid ${i === 0 ? 'var(--maf)' : i === 1 ? 'var(--ok)' : 'var(--warn)'}` }}>
-              <div style={{ fontSize: 12, color: 'var(--muted-ink)', textTransform: 'capitalize', marginBottom: 6 }}>{m.month}</div>
-              <div className="tnum" style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{formatMoney(m.expected)}</div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Последние поступления */}
