@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useMemo } from 'react'
 import { useStore } from '@/lib/store'
-import { Contract, Direction, ContractStatus } from '@/lib/types'
+import { Contract, Direction, ContractStatus, PaymentStatus } from '@/lib/types'
 import { formatMoney, formatDate, isOverdue, exportToCsv, statusLabel, paymentLabel, directionLabel } from '@/lib/utils'
 import { ContractForm } from '@/components/contracts/ContractForm'
 import { StatusBadge, PaymentBadge, DirectionBadge } from '@/components/contracts/StatusBadge'
@@ -31,6 +31,7 @@ export default function ContractsPage() {
   const objectParam = searchParams.get('object') ?? 'all'
   const statusParam      = searchParams.get('status') ?? 'all'
   const directionParam   = searchParams.get('direction') ?? 'all'
+  const paymentParam     = searchParams.get('payment') ?? 'all'
   const customerParam    = searchParams.get('customer') ?? 'all'
   const contractorParam  = searchParams.get('contractor') ?? 'all'
   const searchParam      = searchParams.get('q') ?? ''
@@ -47,6 +48,7 @@ export default function ContractsPage() {
 
   const filterDirection = directionParam as Direction | 'all'
   const filterStatus = statusParam as ContractStatus | 'all'
+  const filterPayment = paymentParam as PaymentStatus | 'all'
   const filterCustomer = customerParam
   const filterContractor = contractorParam
   const search = searchParam
@@ -65,6 +67,7 @@ export default function ContractsPage() {
     if (objectParam !== 'all')       list = list.filter((c) => c.objectId === objectParam)
     if (filterDirection !== 'all')   list = list.filter((c) => c.direction === filterDirection)
     if (filterStatus !== 'all')      list = list.filter((c) => c.status === filterStatus)
+    if (filterPayment !== 'all')     list = list.filter((c) => c.paymentStatus === filterPayment)
     if (filterCustomer !== 'all')    list = list.filter((c) => c.customerId === filterCustomer)
     if (filterContractor !== 'all')  list = list.filter((c) => c.contractorId === filterContractor)
     if (search) {
@@ -84,10 +87,10 @@ export default function ContractsPage() {
       return sortDir === 'asc' ? String(av).localeCompare(String(bv), 'ru') : String(bv).localeCompare(String(av), 'ru')
     })
     return list
-  }, [contracts, objectParam, filterDirection, filterStatus, filterCustomer, filterContractor, search, sortField, sortDir, counterparties, objects])
+  }, [contracts, objectParam, filterDirection, filterStatus, filterPayment, filterCustomer, filterContractor, search, sortField, sortDir, counterparties, objects])
 
   // Сброс страницы при смене фильтров
-  useEffect(() => { setPage(1) }, [objectParam, filterDirection, filterStatus, filterCustomer, filterContractor, search])
+  useEffect(() => { setPage(1) }, [objectParam, filterDirection, filterStatus, filterPayment, filterCustomer, filterContractor, search])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -148,6 +151,7 @@ export default function ContractsPage() {
         {[
           { value: filterDirection, onChange: (v: string) => updateFilter('direction', v), placeholder: 'Направление', options: [{ v: 'all', l: 'Все направления' }, { v: 'maf', l: 'МАФ / Металл' }, { v: 'finishing', l: 'Отделка' }] },
           { value: filterStatus, onChange: (v: string) => updateFilter('status', v), placeholder: 'Статус', options: [{ v: 'all', l: 'Все статусы' }, { v: 'planning', l: 'Планируется' }, { v: 'active', l: 'Активный' }, { v: 'completed', l: 'Завершён' }, { v: 'paused', l: 'Приостановлен' }, { v: 'overdue', l: 'Просрочен' }, { v: 'cancelled', l: 'Отменён' }] },
+          { value: filterPayment, onChange: (v: string) => updateFilter('payment', v), placeholder: 'Оплата', options: [{ v: 'all', l: 'Все варианты оплаты' }, { v: 'paid', l: 'Оплачен' }, { v: 'partial', l: 'Частично оплачен' }, { v: 'not_paid', l: 'Не оплачено' }] },
           { value: filterCustomer, onChange: (v: string) => updateFilter('customer', v), placeholder: 'Заказчик', options: [{ v: 'all', l: 'Все заказчики' }, ...customers.map(c => ({ v: c.id, l: c.name }))] },
           { value: filterContractor, onChange: (v: string) => updateFilter('contractor', v), placeholder: 'Исполнитель', options: [{ v: 'all', l: 'Все исполнители' }, ...contractors.map(c => ({ v: c.id, l: c.name }))] },
         ].map((sel, i) => (
@@ -156,7 +160,7 @@ export default function ContractsPage() {
             {sel.options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
           </select>
         ))}
-        {(search || filterDirection !== 'all' || filterStatus !== 'all' || filterCustomer !== 'all' || filterContractor !== 'all' || objectParam !== 'all') && (
+        {(search || filterDirection !== 'all' || filterStatus !== 'all' || filterPayment !== 'all' || filterCustomer !== 'all' || filterContractor !== 'all' || objectParam !== 'all') && (
           <button onClick={() => router.replace('/contracts')}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 11, border: '1px solid var(--line)', background: '#fff', color: 'var(--muted-ink)', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             <X size={14} /> Сбросить фильтры
