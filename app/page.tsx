@@ -102,6 +102,9 @@ export default function DashboardPage() {
   })), [contracts])
 
   const totalAmount = enriched.reduce((s, c) => s + c.amount, 0)
+  const totalAmount2026 = enriched
+    .filter(c => Number((c.startDate || c.createdAt)?.slice(0, 4)) === 2026)
+    .reduce((s, c) => s + c.amount, 0)
   const totalPaid   = enriched.reduce((s, c) => s + c.amountPaid, 0)
   const currentYear = new Date().getFullYear()
   const paidCurrentYear = payments
@@ -211,7 +214,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Общая сумма */}
-        <KpiCard label="Общая сумма" value={formatMoney(totalAmount)} sub={`${enriched.length} контрактов`} />
+        <KpiCard label="Общая сумма" value={formatMoney(totalAmount)}
+          sub={`${enriched.length} контрактов · в том числе за 2026 год: ${formatMoney(totalAmount2026)}`} />
 
         <KpiCard label="Оплачено" value={formatMoney(totalPaid)} valueColor="var(--ok)"
           sub={totalAmount > 0 ? `${Math.round(totalPaid / totalAmount * 100)}% от суммы · за ${currentYear} год: ${formatMoney(paidCurrentYear)}` : undefined} />
