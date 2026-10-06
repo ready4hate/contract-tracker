@@ -6,6 +6,7 @@ import { formatMoney, newId } from '@/lib/utils'
 import { Plus, Pencil, Trash2, Phone, Mail, Building2, Search, Briefcase, HardHat } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Portal } from '@/components/ui/Portal'
+import { useRouter } from 'next/navigation'
 
 const S = {
   card: { background: '#fff', border: '1px solid var(--line)', borderRadius: 16, boxShadow: 'var(--card-shadow)' } as React.CSSProperties,
@@ -84,18 +85,26 @@ function CounterpartyModal({ open, onClose, initial, defaultType }: { open: bool
 }
 
 function PartyCard({ cp, contracts, onEdit, onDelete }: { cp: Counterparty; contracts: Contract[]; onEdit: () => void; onDelete: () => void }) {
+  const router = useRouter()
   const cpContracts = contracts.filter((c) => c.customerId === cp.id || c.contractorId === cp.id)
   const totalAmount = cpContracts.reduce((s, c) => s + c.amount, 0)
   const isCustomer = cp.type === 'customer'
+  const contractsFilter = isCustomer ? 'customer' : 'contractor'
 
   return (
     <div style={{ ...S.card, padding: 20, display: 'flex', flexDirection: 'column', gap: 12, transition: 'transform .14s, box-shadow .14s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 8px rgba(20,30,55,.05), 0 18px 40px -22px rgba(20,30,55,.3)' }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 12, background: isCustomer ? '#2f6bdc' : '#e07a1a', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+        <button
+          onClick={() => router.push(`/contracts?${contractsFilter}=${encodeURIComponent(cp.id)}`)}
+          title="Открыть контракты контрагента"
+          aria-label={`Открыть контракты: ${cp.name}`}
+          style={{ width: 42, height: 42, borderRadius: 12, border: 'none', background: isCustomer ? '#2f6bdc' : '#e07a1a', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: 'pointer', transition: 'transform .15s, filter .15s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(.92)'; (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = ''; (e.currentTarget as HTMLElement).style.transform = '' }}>
           {isCustomer ? <Briefcase size={20} /> : <HardHat size={20} />}
-        </div>
+        </button>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>{cp.name}</div>
           {cp.company && (
