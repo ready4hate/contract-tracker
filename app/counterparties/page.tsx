@@ -96,15 +96,9 @@ function PartyCard({ cp, contracts, onEdit, onDelete }: { cp: Counterparty; cont
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 8px rgba(20,30,55,.05), 0 18px 40px -22px rgba(20,30,55,.3)' }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-        <button
-          onClick={() => router.push(`/contracts?${contractsFilter}=${encodeURIComponent(cp.id)}`)}
-          title="Открыть контракты контрагента"
-          aria-label={`Открыть контракты: ${cp.name}`}
-          style={{ width: 42, height: 42, borderRadius: 12, border: 'none', background: isCustomer ? '#2f6bdc' : '#e07a1a', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: 'pointer', transition: 'transform .15s, filter .15s' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(.92)'; (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = ''; (e.currentTarget as HTMLElement).style.transform = '' }}>
+        <div style={{ width: 42, height: 42, borderRadius: 12, background: isCustomer ? '#2f6bdc' : '#e07a1a', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
           {isCustomer ? <Briefcase size={20} /> : <HardHat size={20} />}
-        </button>
+        </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>{cp.name}</div>
           {cp.company && (
@@ -125,9 +119,18 @@ function PartyCard({ cp, contracts, onEdit, onDelete }: { cp: Counterparty; cont
         {cp.email && <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}><Mail size={13} style={{ color: 'var(--faint)', flexShrink: 0 }} /><a href={`mailto:${cp.email}`} style={{ color: 'var(--maf)', textDecoration: 'none' }}>{cp.email}</a></div>}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--line-soft)', paddingTop: 12, marginTop: 4, fontSize: 13 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', borderTop: '1px solid var(--line-soft)', paddingTop: 12, marginTop: 4, fontSize: 13 }}>
         <span style={{ color: 'var(--muted-ink)' }}><b className="tnum" style={{ color: 'var(--ink)' }}>{cpContracts.length}</b> контракта</span>
-        {totalAmount > 0 && <span className="tnum" style={{ fontWeight: 700 }}>{formatMoney(totalAmount)}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          {totalAmount > 0 && <span className="tnum" style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{formatMoney(totalAmount)}</span>}
+          <button
+            onClick={() => router.push(`/contracts?${contractsFilter}=${encodeURIComponent(cp.id)}`)}
+            style={{ border: '1px solid #2f6bdc', borderRadius: 8, padding: '6px 9px', background: '#eff6ff', color: '#2f6bdc', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#2f6bdc'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#eff6ff'; (e.currentTarget as HTMLElement).style.color = '#2f6bdc' }}>
+            Открыть контракты
+          </button>
+        </div>
       </div>
     </div>
   )
